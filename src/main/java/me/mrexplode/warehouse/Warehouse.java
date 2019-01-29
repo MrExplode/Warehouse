@@ -55,6 +55,7 @@ public class Warehouse {
 
     public boolean unlock() {
         System.out.println("=== Unlocking " + storeDir.getName());
+        long start = System.currentTimeMillis();
         try {
             if (!mapFile.exists()) return false;
             
@@ -81,6 +82,7 @@ public class Warehouse {
             }
             mapFile.delete();
             
+            System.out.println("=== Unlocked '" + storeDir.getName() + "' folder in " + (System.currentTimeMillis() - start) + " ms");
             return true;
         } catch (IOException | GeneralSecurityException | DecoderException e) {
             e.printStackTrace();
@@ -90,6 +92,7 @@ public class Warehouse {
     
     public boolean lock() {
         System.out.println("=== Locking " + storeDir.getName());
+        long start = System.currentTimeMillis();
         try {
             crypto.setupEncrypt();
             
@@ -112,6 +115,8 @@ public class Warehouse {
                 f.delete();
                 MainGUI.instance.progressBar.setValue(i + 1);
             }
+            
+            System.out.println("=== Locked '" + storeDir.getName() + "' folder in " + (System.currentTimeMillis() - start) + " ms");
             return true;
         } catch (GeneralSecurityException | IOException e) {
             e.printStackTrace();

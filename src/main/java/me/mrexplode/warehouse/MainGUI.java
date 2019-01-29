@@ -5,6 +5,7 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.PrintStream;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -16,6 +17,8 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 
 public class MainGUI extends JFrame {
@@ -36,6 +39,7 @@ public class MainGUI extends JFrame {
     protected JProgressBar progressBar;
     private JPasswordField pwd2Field;
     private JLabel lblPasswordAgain;
+    private JTextArea console;
 
     /**
      * Launch the application.
@@ -163,5 +167,14 @@ public class MainGUI extends JFrame {
         progressBar = new JProgressBar();
         progressBar.setBounds(10, 240, 424, 20);
         contentPane.add(progressBar);
+        
+        console = new JTextArea();
+        console.setBounds(181, 56, 253, 145);
+        console.setEditable(false);
+        System.setOut(new PrintStream(new StreamCapturer(console, System.out)));
+        System.setErr(new PrintStream(new StreamCapturer(console, System.err)));
+        JScrollPane scroll = new JScrollPane(console);
+        scroll.setBounds(181, 56, 253, 145);
+        contentPane.add(scroll);
     }
 }
