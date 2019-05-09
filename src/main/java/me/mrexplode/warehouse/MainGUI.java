@@ -19,6 +19,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import java.awt.Font;
 
 
 public class MainGUI extends JFrame {
@@ -169,6 +170,7 @@ public class MainGUI extends JFrame {
         contentPane.add(progressBar);
         
         console = new JTextArea();
+        console.setFont(new Font("Monospaced", Font.PLAIN, 13));
         console.setBounds(181, 56, 253, 145);
         console.setEditable(false);
         System.setOut(new PrintStream(new StreamCapturer(console, System.out)));
