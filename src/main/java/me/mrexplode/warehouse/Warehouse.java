@@ -61,7 +61,6 @@ public class Warehouse {
             if (!mapFile.exists()) return false;
             
             DataInputStream dataIn = getIn(mapFile);
-            dataIn.skipBytes(60);
             dataIn.readUTF();
             String salt = dataIn.readUTF();
             String iv = dataIn.readUTF();
@@ -141,9 +140,6 @@ public class Warehouse {
     
     @SuppressWarnings("resource")
     private static DataOutputStream getOut(File f) throws FileNotFoundException {
-        //warning message
-        PrintWriter w = new PrintWriter(f);
-        w.println("WARNING: IF YOU DELETE THIS FILE, YOUR CONTENT WILL BE LOST!");
         //this is ridiculous
         return new DataOutputStream(new CipherOutputStream(new FileOutputStream(f, true), Crypto.getOneTimeCipher(Cipher.ENCRYPT_MODE, "c2fc2f64438b1eb36b7e244bdb7bd535")));
     }
