@@ -32,10 +32,10 @@ public class Crypto {
 
     String mPassword = null;
     public final static int SALT_LEN = 8;
-    byte[] mInitVec = null;
-    byte[] mSalt = null;
-    Cipher mEcipher = null;
-    Cipher mDecipher = null;
+    private byte[] mInitVec = null;
+    private byte[] mSalt = null;
+    private Cipher mEcipher = null;
+    private Cipher mDecipher = null;
     private final int KEYLEN_BITS = 128; // see notes below where this is used.
     private final int ITERATIONS = 65536;
     private final int MAX_FILE_BUF = 1024;
@@ -48,6 +48,23 @@ public class Crypto {
      */
     public Crypto(String hash) {
         mPassword = hash;
+    }
+    
+    /**
+     * Only for the inheritance of crypto modules
+     * 
+     * @param hash
+     * @param initVec
+     * @param salt
+     * @param ECipher cipher for encryption
+     * @param DCipher cipher for decryption
+     */
+    public Crypto(String hash, byte[] initVec, byte[] salt, Cipher ECipher, Cipher DCipher) {
+        mPassword = hash;
+        mInitVec = initVec;
+        mSalt = salt;
+        mEcipher = ECipher;
+        mDecipher = DCipher;
     }
 
     /**
@@ -66,6 +83,22 @@ public class Crypto {
      */
     public byte[] getInitVec() {
         return (mInitVec);
+    }
+    
+    /**
+     * Only for the inheritance of crypto modules
+     * @return encrypt cipher
+     */
+    protected Cipher getEncryptCipher() {
+        return mEcipher;
+    }
+    
+    /**
+     * Only for the inheritance of crypto modules
+     * @return decrypt cipher
+     */
+    protected Cipher getDecryptCipher() {
+        return mDecipher;
     }
 
     /**
