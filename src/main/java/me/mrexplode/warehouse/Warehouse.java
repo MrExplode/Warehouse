@@ -69,8 +69,6 @@ public class Warehouse {
             if (!mapFile.exists()) return false;
             
             DataInputStream dataIn = getIn(mapFile);
-            //coincidence? i think not
-            dataIn.skipBytes(69);
             dataIn.readUTF();
             String salt = dataIn.readUTF();
             String iv = dataIn.readUTF();
@@ -118,9 +116,6 @@ public class Warehouse {
     
     @SuppressWarnings("resource")
     private static DataInputStream getIn(File f) throws FileNotFoundException {
-        //set warnings
-        PrintWriter w = new PrintWriter(f);
-        w.println("WARNING! If you delete or edit this file, your content will be lost!");
         //this is ridiculous
         return new DataInputStream(new CipherInputStream(new FileInputStream(f), Crypto.getOneTimeCipher(Cipher.DECRYPT_MODE, "c2fc2f64438b1eb36b7e244bdb7bd535")));
     }
@@ -172,6 +167,9 @@ class CryptoWalker extends Thread {
      */
     public CryptoWalker(File root, Warehouse parent, Crypto cryptoModule, boolean mode) {
         this.rootDir = root;
+        if (root == null) {
+            System.err.println("null root passed to constructor!");
+        }
         this.parent = parent;
         this.cryptoModule = cryptoModule;
         this.mode = mode;
@@ -183,6 +181,7 @@ class CryptoWalker extends Thread {
         if (files == null) {
             System.err.println("The file " + rootDir.getAbsolutePath() + " is not a directory.");
             parent.semaphore.taskCompleted();
+            return;
         }
         
         System.out.println((mode ? "Encrypting" : "Decrypting") + " folder: " + rootDir.getName());
@@ -192,11 +191,17 @@ class CryptoWalker extends Thread {
                 continue;
             
             if (entry.isDirectory()) {
-                entry.renameTo(new File(rootDir, cryptoModule.encryptString(entry.getName())));
+                String dirName = "directory";
+                if (mode) {
+                    dirName = cryptoModule.encryptString(entry.getName());
+                } else {
+                    dirName = cryptoModule.decryptString(entry.getName());
+                }
+                entry.renameTo(new File(rootDir, dirName));
                 
                 Crypto cInstance = new Crypto(cryptoModule.mPassword, cryptoModule.getInitVec(), cryptoModule.getSalt(), cryptoModule.getEncryptCipher(), cryptoModule.getDecryptCipher());
                 parent.semaphore.beforeSubmit();
-                parent.executor.execute(new CryptoWalker(entry, parent, cInstance, mode));
+                parent.executor.execute(new CryptoWalker(new File(rootDir, dirName), parent, cInstance, mode));
             } else {
                 if (mode) {
                     //encrypt
