@@ -77,25 +77,16 @@ public class Warehouse {
             dataIn.close();
             
             crypto.setupDecrypt(iv, salt);
-            
-            File[] files = storeDir.listFiles((file) -> {
-                return !file.isDirectory() && !file.getName().equals("25142d025c0a10143eb9f2298fb46f68");
-            });
-            
-            setProgressBar(files.length);
-            
-            for (int i = 0; i < files.length; i++) {
-                File f = files[i];
-                System.out.println("= Unlocking file: " + f.getName());
-                crypto.readEncryptedFile(f, new File(storeDir, crypto.decryptString(f.getName())));
-                f.delete();
-                MainGUI.instance.progressBar.setValue(i + 1);
-            }
+
+            semaphore.beforeSubmit();
+            executor.execute(new CryptoWalker(storeDir, this, crypto, false));
+            semaphore.awaitCompletion();
+
             mapFile.delete();
             
             System.out.println("=== Unlocked '" + storeDir.getName() + "' folder in " + (System.currentTimeMillis() - start) + " ms");
             return true;
-        } catch (IOException | GeneralSecurityException | DecoderException e) {
+        } catch (IOException | GeneralSecurityException | InterruptedException | DecoderException e) {
             e.printStackTrace();
             return false;
         }
@@ -113,33 +104,16 @@ public class Warehouse {
             dataOut.writeUTF(Hex.encodeHexString(crypto.getInitVec()));
             dataOut.close();
             
-            File[] files = storeDir.listFiles((file) -> {
-                return !file.isDirectory() && !file.getName().equals("map.aes");
-            });
-            
-            setProgressBar(files.length);
-            
-            for (int i = 0; i < files.length; i++) {
-                File f = files[i];
-                System.out.println("= Locking file: " + f.getName());
-                crypto.writeEncryptedFile(f, new File(storeDir, crypto.encryptString(f.getName())));
-                f.delete();
-                MainGUI.instance.progressBar.setValue(i + 1);
-            }
+            semaphore.beforeSubmit();
+            executor.execute(new CryptoWalker(storeDir, this, crypto, true));
+            semaphore.awaitCompletion();
             
             System.out.println("=== Locked '" + storeDir.getName() + "' folder in " + (System.currentTimeMillis() - start) + " ms");
             return true;
-        } catch (GeneralSecurityException | IOException e) {
+        } catch (GeneralSecurityException | IOException | InterruptedException e) {
             e.printStackTrace();
             return false;
         }
-    }
-    
-    private static void setProgressBar(int max) {
-        JProgressBar bar = MainGUI.instance.progressBar;
-        bar.setMaximum(max);
-        bar.setMinimum(0);
-        bar.setValue(0);
     }
     
     @SuppressWarnings("resource")
@@ -238,6 +212,7 @@ class CryptoWalker extends Thread {
                     //decrypt
                     try {
                         cryptoModule.readEncryptedFile(entry, new File(rootDir, cryptoModule.decryptString(entry.getName())));
+                        entry.delete();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
